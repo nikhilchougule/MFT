@@ -38,13 +38,146 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2020 - Students - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2024 - Students - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/qrcode.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            $.ajax({
+                url: '/Home/Authenticated',
+                type: 'get',
+                success: function (data) {
+                    console.log('from authenticated' + JSON.stringify(data));
+
+                    if (data.isAuthenticated === true) {
+                        console.log('is authenticated');
+
+                        $.ajax({
+                            url: '/Home/GetJsonOfUser',
+                            type: 'get',
+                            success: function (data) {
+                                console.log('getting json of user as stringify' + data);
+                                if (data != "") {
+                                    console.log('json is not blank');
+                                    ProcessUserJsonForm(data);
+                                } else if (data == "") {
+                                    console.log('json is blank');
+                                    ProcessJsonForm();
+                                }
+                            }
+                        });
+                    }
+                    else if (data.isAuthenticated === false) {
+                        console.log('is not authenticated');
+                    }
+                }
+            });
+        });
+
+        function ProcessUserJsonForm(userJson) {
+            let formData = "";
+            formData = '<form id="studentForm">';
+            var json = JSON.parse(userJson);
+
+            $.each(json, function (key, value) {
+                formData = formData + '<div class="form-floating mb-3">'
+                formData = formData + '<label for="' + key + '" class="form-label">' + key + ': </label>';
+                formData = formData + '<input type="text" class="form-control" id="' + key + '" name="' + key + '" value="' + value + '" />';
+                formData = formData + '</div>';
+            });
+
+            formData = formData + '</form>';
+            formData = formData + '<button id="saveForm" type="button" class="w-100 btn btn-lg btn-primary" value="Save">Save</button>';
+
+            document.getElementById("jsonRoot").innerHTML += formData;
+
+            //SaveForm
+            $('#saveForm').click(function (e) {
+                e.preventDefault();
+                var formArray = $("#studentForm").serializeArray();
+                console.log('form array' + JSON.stringify(formArray));
+
+                $.each(json, function (key, value) {
+                    for (var i = 0; i < formArray.length; i++) {
+                        if (key == formArray[i].name) {
+                            json[key] = formArray[i].value;
+                        }
+                    }
+                });
+
+                $.ajax({
+                    url: '/Home/SubmitDetails',
+                    type: 'POST',
+                    dataType: 'json',
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(json),
+                    success: function (data) {
+                        //console.log('from method save' + JSON.stringify(data));
+                        alert('Profile Saved Successfully');
+                    }
+                });
+            });
+            //SaveForm
+        };
+
+        function ProcessJsonForm() {
+            //GetFormFromJson
+            $.getJSON("/js/studentsConfig.json", function (json) {
+                console.log("JSON DTO: " + JSON.stringify(json));
+
+                let formData = "";
+                formData = '<form id="studentForm">';
+
+                $.each(json, function (key, value) {
+                    formData = formData + '<div class="form-floating mb-3">'
+                    formData = formData + '<label for="' + key + '" class="form-label">' + key + ': </label>';
+                    formData = formData + '<input type="text" class="form-control" id="' + key + '" name="' + key + '" value="" />';
+                    formData = formData + '</div>';
+                });
+
+                formData = formData + '</form>';
+                formData = formData + '<button id="saveForm" type="button" class="w-100 btn btn-lg btn-primary" value="Save">Save</button>';
+
+                document.getElementById("jsonRoot").innerHTML += formData;
+
+                //SaveForm
+                $('#saveForm').click(function (e) {
+                    e.preventDefault();
+                    var formArray = $("#studentForm").serializeArray();
+                    console.log('form array' + JSON.stringify(formArray));
+
+                    $.each(json, function (key, value) {
+                        for (var i = 0; i < formArray.length; i++) {
+                            if (key == formArray[i].name) {
+                                json[key] = formArray[i].value;
+                            }
+                        }
+                    });
+
+                    $.ajax({
+                        url: '/Home/SubmitDetails',
+                        type: 'POST',
+                        dataType: 'json',
+                        contentType: "application/json; charset=utf-8",
+                        data: JSON.stringify(json),
+                        success: function (data) {
+                            //console.log('from method save' + JSON.stringify(data));
+                            alert('Profile Saved Successfully');
+                        }
+                    });
+                });
+                //SaveForm
+            });
+            //GetFormFromJson
+        };
+    </script>
 </body>
 </html>

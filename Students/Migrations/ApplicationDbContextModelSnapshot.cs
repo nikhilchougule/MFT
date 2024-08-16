@@ -121,6 +121,10 @@ namespace Students.Migrations
 					.HasMaxLength(256)
 					.HasColumnType("varchar(256)");
 
+				b.Property<string>("Json")
+					.HasMaxLength(900)
+					.HasColumnType("varchar(900)");
+
 				b.HasKey("Id");
 
 				b.HasIndex("NormalizedEmail")
